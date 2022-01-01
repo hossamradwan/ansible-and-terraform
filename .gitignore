@@ -1,0 +1,11 @@
+#local tf files have the installed providers
+.terraform/*
+
+.history/*
+
+#tf state files
+*.tfstate
+*.tfstate.*
+
+#tf variables files
+*.tfvars

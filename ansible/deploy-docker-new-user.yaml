@@ -1,0 +1,84 @@
+---
+- name: Wait for ssh connection
+  hosts: all
+  tasks:
+    - name: Ensure ssh port is open
+      vars:
+          ansible_connection: local
+          ansible_python_interpreter: /usr/bin/python # do this task with python 2
+      wait_for:
+        port: 22
+        delay: 10 # start checking the port is open after 10 seconds
+        timeout: 100
+        search_regex: OpenSSH
+        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+      
+
+- name: Install python3, docker and docker compose
+  hosts: all
+  become: yes # by default switch to root user
+  gather_facts: False
+  tasks:
+    - name: Install python3 and docker
+      vars:
+        ansible_python_interpreter: /usr/bin/python # do this task with python 2
+      yum: # yum does not support python3
+        name: 
+          - python3
+          - docker
+        update_cache: yes
+        state: present
+    - name: Install Docker-compose
+      get_url:
+        url: https://github.com/docker/compose/releases/download/1.27.4/docker-compose-Linux-{{lookup('pipe', 'uname -m')}}
+        dest: /usr/local/bin/docker-compose
+        mode: +x # the mode of the downloaded file
+    - name: Start docker daemon
+      systemd:
+        name: docker
+        state: started
+    - name: Install docker and docker-compose python modules
+      pip:
+        name: 
+          - docker
+          - docker-compose
+    
+- name: Create new linux user
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create new linux user
+      user:
+        name: hossam
+        groups: adm,docker
+       
+- name: Give execute permission to docker.sock
+  hosts: all
+  become: yes
+  tasks:
+    - name: Give execute permission permisson to docker.sock
+      file:
+        path: /var/run/docker.sock
+        mode: '0777'
+
+- name: Start docker containers
+  hosts: all
+  become: yes
+  become_user: hossam
+  vars_files:
+    - project-vars.yaml
+  tasks:
+    - name: Copy docker compose
+      copy:
+        src: docker-compose.yaml
+        dest: /home/hossam/docker-compose.yaml
+    - name: Dockerlogin
+      docker_login:
+        registry_url: https://index.docker.io/v1
+        username: hossam1radwan
+        password: "{{docker_password}}"
+    - name: Start container from compose
+      docker_compose: 
+        project_src: /home/hossam
+        state: present # docker-compose up
+    
