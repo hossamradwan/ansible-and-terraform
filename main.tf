@@ -129,24 +129,25 @@ resource "aws_instance" "myapp-server" {
 
   # provisioner "local-exec" {
   #   working_dir = "./ansible/"
-  #   # --inventory overrides the host file
+  #   # --inventory overrides the host file " tell the ip of the remote"
   #   command = "ansible-playbook --inventory ${self.public_ip}, --private-key ${var.ssh_key_private} --user ec2-user deploy-docker-new-user.yaml" 
 
   # }
 
 }
 
-resource "null_resource" "configure_server" {
-  triggers = {
-    trigger = aws_instance.myapp-server.public_ip
-  }
+# resource "null_resource" "configure_server" {
+    # do when a new instance with new ip address is created
+#   triggers = {
+#     trigger = aws_instance.myapp-server.public_ip
+#   }
 
-  provisioner "local-exec" {
-    working_dir = "./ansible/"
-    # --inventory overrides the host file
-    command = "ansible-playbook --inventory ${aws_instance.myapp-server.public_ip}, --private-key ${var.ssh_key_private} --user ec2-user deploy-docker-new-user.yaml" 
-  }
-}
+#   provisioner "local-exec" {
+#     working_dir = "./ansible/"
+#     # --inventory overrides the host file
+#     command = "ansible-playbook --inventory ${aws_instance.myapp-server.public_ip}, --private-key ${var.ssh_key_private} --user ec2-user deploy-docker-new-user.yaml" 
+#   }
+# }
 
 output "ec2_public_ip" {
   value = aws_instance.myapp-server.public_ip

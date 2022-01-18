@@ -1,21 +1,21 @@
 ---
 - name: Wait for ssh connection
-  hosts: all
+  hosts: tag_Name_dev # or all
   tasks:
     - name: Ensure ssh port is open
       vars:
-          ansible_connection: local
-          ansible_python_interpreter: /usr/bin/python # do this task with python 2
+          ansible_connection: local # execute task from local host
+          # ansible_python_interpreter: /usr/bin/python # do this task with python 2
       wait_for:
         port: 22
         delay: 10 # start checking the port is open after 10 seconds
         timeout: 100
         search_regex: OpenSSH
-        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}' # on which host we want see port 22
       
 
 - name: Install python3, docker and docker compose
-  hosts: all
+  hosts: tag_Name_dev
   become: yes # by default switch to root user
   gather_facts: False
   tasks:
@@ -44,7 +44,7 @@
           - docker-compose
     
 - name: Create new linux user
-  hosts: all
+  hosts: tag_Name_dev
   become: yes
   tasks:
     - name: Create new linux user
@@ -53,7 +53,7 @@
         groups: adm,docker
        
 - name: Give execute permission to docker.sock
-  hosts: all
+  hosts: tag_Name_dev
   become: yes
   tasks:
     - name: Give execute permission permisson to docker.sock
@@ -62,7 +62,7 @@
         mode: '0777'
 
 - name: Start docker containers
-  hosts: all
+  hosts: tag_Name_dev
   become: yes
   become_user: hossam
   vars_files:
